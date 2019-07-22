@@ -40,6 +40,10 @@
     <PackageReference Include="Microsoft.Extensions.Hosting.Abstractions" Version="2.2.0" />
     <PackageReference Include="Microsoft.Extensions.Options.ConfigurationExtensions" Version="2.2.0" />
     <PackageReference Include="System.Threading.Thread" Version="4.0.0" />   
+    <PackageReference Include="NBitcoin" Version="4.1.2.38" />
+    <PackageReference Include="Nethereum.HdWallet" Version="3.2.0" />
+    <PackageReference Include="Nethereum.StandardTokenEIP20" Version="3.3.0" />
+    <PackageReference Include="Nethereum.Web3" Version="3.3.0" />
   </ItemGroup>
 
 </Project>
