@@ -16,9 +16,12 @@
             "stopAtEntry": false,
             "env": {
                 "ASPNETCORE_ENVIRONMENT": "Development",
-                "ContractAddresses:0": "0xAbC0ecdaD3c1EFc21a6857F288def37CD5439d80",
-                "TrackedAddresses:0": "0xde769dda17eD7d2178a5646D279382d0CaEC8079",
-                "TrackedAddresses:1": "0xD5eaddD9462D2138389d3Ca281c3a10c952267E5",
+                "ContractAddresses:0": "0xaB444E1308135DdfB69be88870CE2F200B90cC58",
+                "TrackedAddresses:0": "0x18d650D80A38f72Cb4d92ec7fC04ca96D9aeC8d3",
+                "TrackedAddresses:1": "0x69AF94Df95254983CB475186fB07134A6be13b82",
+                "Seed": "hundred couple soup flash wait scorpion night donate manual mean flee ability",
+                "HdAddressCount": "25",
+                "LastProcessedBlock": "0",
             }
         },
         {

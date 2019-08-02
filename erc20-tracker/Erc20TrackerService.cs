@@ -11,24 +11,43 @@ using Nethereum.Web3;
 using System.Text;
 using Newtonsoft.Json;
 using RabbitMQ.Client;
+using Nethereum.HdWallet;
 
 namespace erc20_tracker
 {
     public class Erc20TrackerService : BackgroundService
     {
-        private readonly IApplicationLifetime _applicationLifetime;
         private readonly Settings _settings;
         private readonly Web3 _web3;
         IModel _channel;
+        private readonly List<string> _trackedAddresses; 
 
-        public Erc20TrackerService(
-            IApplicationLifetime applicationLifetime,
-            IOptions<Settings> settings)
+        public Erc20TrackerService(IOptions<Settings> settings)
         {
-            _settings = (settings ?? throw new ArgumentNullException(nameof(applicationLifetime))).Value;
-            _applicationLifetime = applicationLifetime ?? throw new ArgumentNullException(nameof(applicationLifetime));
+            _settings = (settings ?? throw new ArgumentNullException(nameof(settings))).Value;
+            
+            _trackedAddresses = _settings.TrackedAddresses;
             _web3 = new Web3(_settings.NodeUrl);
+        }
 
+        private void PopulateAddressesFromHdWallet() 
+        {
+            var wallet = new Wallet(_settings.Seed, "");
+
+            int addressCount = _settings.HdAddressCount > 0 ? _settings.HdAddressCount : 20;
+            for (int i = 0; i < addressCount; i++)
+            {
+                var address = wallet.GetAccount(i).Address;
+                if(_trackedAddresses.Contains(address)) continue;
+                _trackedAddresses.Add(address);
+            }
+        }
+
+        protected override async Task ExecuteAsync(CancellationToken stoppingToken)
+        {
+            if(!string.IsNullOrEmpty(_settings.Seed)) PopulateAddressesFromHdWallet();
+
+            // Initialize rabbitmq ->
             var factory = new ConnectionFactory() { 
                 HostName = _settings.RabbitMqHostName,
                 UserName = _settings.RabbitMqUsername,
@@ -43,16 +62,12 @@ namespace erc20_tracker
                 _channel.QueueDeclare(queueName, true, false, false);
                 _channel.QueueBind(queueName, _settings.RabbitMqExchangeName, contract);
             }
-        }
 
-        protected override async Task ExecuteAsync(CancellationToken stoppingToken)
-        {
-            ulong lastBlock = 0;
-
-            while (!_applicationLifetime.ApplicationStopping.IsCancellationRequested)
+            ulong lastProcessedBlock = _settings.LastProcessedBlock > 0 ? _settings.LastProcessedBlock : 0;
+            while (!stoppingToken.IsCancellationRequested)
             {
                 ulong blockNumber = (ulong)(await _web3.Eth.Blocks.GetBlockNumber.SendRequestAsync()).Value;
-                if (blockNumber == lastBlock ) {
+                if (blockNumber == lastProcessedBlock ) {
                     await Task.Delay(TimeSpan.FromMilliseconds(1000), stoppingToken);
                     continue;
                 }
@@ -62,7 +77,7 @@ namespace erc20_tracker
                 {
                     var transferEventHandler = _web3.Eth.GetEvent<TransferEventDTO>(contract);
                     var filter = transferEventHandler.CreateFilterInput(
-                        fromBlock: new BlockParameter(lastBlock + 1),
+                        fromBlock: new BlockParameter(lastProcessedBlock + 1),
                         toBlock: BlockParameter.CreateLatest()
                     );
                     var events = await transferEventHandler.GetAllChanges(filter);
@@ -83,7 +98,7 @@ namespace erc20_tracker
 
                 SendTheTransactions(transactionList);
 
-                lastBlock = blockNumber;
+                lastProcessedBlock = blockNumber;
             }
         }
 

@@ -11,5 +11,8 @@ namespace erc20_tracker
         public string RabbitMqPassword {get;set;}
         public string RabbitMqExchangeName {get;set;}
         public string NodeUrl {get;set;}
+        public string Seed { get; set; }
+        public int HdAddressCount { get; set; }
+        public ulong LastProcessedBlock { get; set; }
     }
 }

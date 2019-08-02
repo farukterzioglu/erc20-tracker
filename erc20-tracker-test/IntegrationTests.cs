@@ -62,5 +62,22 @@ namespace Tests
             
             Assert.AreEqual((BigInteger)100, currentBalance);
         }
+
+        [Test]
+        public async Task TransferToASpecificContract()
+        {
+            var contractAddress = "0xaB444E1308135DdfB69be88870CE2F200B90cC58";
+
+            var balanceHandler = _web3.Eth.GetContractQueryHandler<BalanceOfFunction>();
+            var currentBalance = await balanceHandler.QueryAsync<BigInteger>(contractAddress, new BalanceOfFunction() { Owner = _receiver });
+
+            var transferHandler = _web3.Eth.GetContractTransactionHandler<TransferFunction>();
+            var transfer = new TransferFunction() { To = _receiver, Value = 100 };
+            await transferHandler.SendRequestAndWaitForReceiptAsync(contractAddress, transfer);
+
+            var newBalance = await balanceHandler.QueryAsync<BigInteger>(contractAddress, new BalanceOfFunction() { Owner = _receiver });
+            
+            Assert.AreEqual((BigInteger)100, newBalance-currentBalance);
+        }
     }
 }
