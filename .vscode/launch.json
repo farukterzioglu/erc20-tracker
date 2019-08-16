@@ -5,7 +5,21 @@
     "version": "0.2.0",
     "configurations": [
         {
-            "name": ".NET Core Launch (console)",
+            "name": "erc20-tracker (Full Node)",
+            "type": "coreclr",
+            "request": "launch",
+            "preLaunchTask": "build",
+            "program": "${workspaceFolder}/erc20-tracker/bin/Debug/netcoreapp2.2/erc20-tracker.dll",
+            "args": [],
+            "cwd": "${workspaceFolder}/erc20-tracker",
+            "console": "internalConsole",
+            "stopAtEntry": false,
+            "env": {
+                "ASPNETCORE_ENVIRONMENT": "Fullnode"
+            }
+        },
+        {
+            "name": "erc20-tracker (Ganache)",
             "type": "coreclr",
             "request": "launch",
             "preLaunchTask": "build",
