@@ -31,8 +31,11 @@ namespace erc20_tracker
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
             _settings = (settings ?? throw new ArgumentNullException(nameof(settings))).Value;
             
-            _trackedAddresses = _settings.TrackedAddresses.Select( x=> x.ToLower()).ToList();
+            _trackedAddresses = new List<string>();
             _web3 = new Web3(_settings.NodeUrl);
+
+            if(_settings.TrackedAddresses != null) 
+                _trackedAddresses.AddRange(_settings.TrackedAddresses.Select( x=> x.ToLower()).ToList());
         }
 
         private void PopulateAddressesFromHdWallet() 
@@ -44,7 +47,7 @@ namespace erc20_tracker
             {
                 var address = wallet.GetAccount(i).Address;
                 if(_trackedAddresses.Contains(address)) continue;
-                _trackedAddresses.Add(address);
+                _trackedAddresses.Add(address.ToLower());
             }
         }
 
@@ -76,7 +79,7 @@ namespace erc20_tracker
             {
                 ulong blockNumber = (ulong)(await _web3.Eth.Blocks.GetBlockNumber.SendRequestAsync()).Value;
                 if (blockNumber == lastProcessedBlock ) {
-                    await Task.Delay(TimeSpan.FromMilliseconds(1000), stoppingToken);
+                    await Task.Delay(TimeSpan.FromSeconds(15), stoppingToken);
                     continue;
                 }
                 _logger.LogInformation($"Latest block : {blockNumber}");
@@ -84,6 +87,8 @@ namespace erc20_tracker
                 List<TokenTransaction> transactionList = new List<TokenTransaction>();
                 foreach (var contract in _settings.ContractAddresses)
                 {
+                    _logger.LogInformation($"Checking events in blocks between {lastProcessedBlock + 1}-{blockNumber} for contract {contract}...");
+
                     var transferEventHandler = _web3.Eth.GetEvent<TransferEventDTO>(contract);
                     var filter = transferEventHandler.CreateFilterInput(
                         fromBlock: new BlockParameter(lastProcessedBlock + 1),
@@ -91,9 +96,10 @@ namespace erc20_tracker
                     );
                     var events = await transferEventHandler.GetAllChanges(filter);
                     _logger.LogInformation($"Total {events.Count} events between blocks {lastProcessedBlock + 1}-{blockNumber}");
+                    if(!events.Any()) continue;
 
                     var trackedEventList = events
-                        .Where( transactionEvent => _trackedAddresses.Contains(transactionEvent.Event.To))
+                        .Where( transactionEvent => !_trackedAddresses.Any() || _trackedAddresses.Contains(transactionEvent.Event.To))
                         .Select( transactionEvent => new TokenTransaction(){
                             ContractAddress = contract,
                             From = transactionEvent.Event.From,
@@ -101,12 +107,16 @@ namespace erc20_tracker
                             Value = transactionEvent.Event.Value
                         })
                         .ToList();
-                    _logger.LogInformation($"{trackedEventList.Count} events for tracked addresses from contract {contract}");
+                    
+                    if(_trackedAddresses.Any())
+                        _logger.LogInformation($"{trackedEventList.Count} events for tracked addresses from contract {contract}");
+
+                    if(!trackedEventList.Any()) continue;
 
                     transactionList.AddRange(trackedEventList);
                 }
 
-                if(_channel != null) SendTheTransactions(transactionList);
+                if(_channel != null && transactionList.Any()) SendTheTransactions(transactionList);
 
                 lastProcessedBlock = blockNumber;
             }

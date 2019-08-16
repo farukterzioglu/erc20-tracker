@@ -25,6 +25,12 @@ namespace erc20_tracker
                         .AddEnvironmentVariables();
                     if (args != null) configApp.AddCommandLine(args);
                 })
+                .ConfigureLogging((hostBuilderContext, loggingBuilder) =>
+                {
+                    loggingBuilder.AddConfiguration(hostBuilderContext.Configuration.GetSection("Logging"));
+                    loggingBuilder.AddConsole();
+                    loggingBuilder.SetMinimumLevel(LogLevel.Debug);
+                })
                 .ConfigureServices((hostContext, services) => {
                     services.AddOptions();
 

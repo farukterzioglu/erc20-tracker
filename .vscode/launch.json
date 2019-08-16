@@ -5,6 +5,34 @@
     "version": "0.2.0",
     "configurations": [
         {
+            "name": "erc20-tracker (Full Node, all txs)",
+            "type": "coreclr",
+            "request": "launch",
+            "preLaunchTask": "build",
+            "program": "${workspaceFolder}/erc20-tracker/bin/Debug/netcoreapp2.2/erc20-tracker.dll",
+            "args": [],
+            "cwd": "${workspaceFolder}/erc20-tracker",
+            "console": "internalConsole",
+            "stopAtEntry": false,
+            "env": {
+                "ASPNETCORE_ENVIRONMENT": "FullnodeAllTxs"
+            }
+        },
+        {
+            "name": "erc20-tracker (Full Node w/ seed)",
+            "type": "coreclr",
+            "request": "launch",
+            "preLaunchTask": "build",
+            "program": "${workspaceFolder}/erc20-tracker/bin/Debug/netcoreapp2.2/erc20-tracker.dll",
+            "args": [],
+            "cwd": "${workspaceFolder}/erc20-tracker",
+            "console": "internalConsole",
+            "stopAtEntry": false,
+            "env": {
+                "ASPNETCORE_ENVIRONMENT": "FullnodeWithSeed"
+            }
+        },
+        {
             "name": "erc20-tracker (Full Node)",
             "type": "coreclr",
             "request": "launch",
