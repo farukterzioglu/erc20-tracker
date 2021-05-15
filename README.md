@@ -9,6 +9,8 @@ docker build -t erc20-tracker .
 `  
 
 Run on full node, listen Tether for all txs  
+(Tether contract address used as sample: [0xdAC17F958D2ee523a2206206994597C13D831ec7](https://etherscan.io/address/0xdac17f958d2ee523a2206206994597c13d831ec7)  
+  
 `
 $ docker run -e NODEURL=http://52.208.46.161:8546 -e CONTRACTADDRESSES:0=0xdAC17F958D2ee523a2206206994597C13D831ec7 -e LASTPROCESSEDBLOCK=8363860 erc20-tracker
 `
